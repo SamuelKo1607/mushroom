@@ -2,6 +2,7 @@ import urllib.request
 import datetime as dt
 import pickle
 import os
+from api_keys import url_agent
 
 class Post:
     
@@ -10,6 +11,7 @@ class Post:
         self.city = city
         self.is_positive = is_positive
         self.comment = comment
+        
         
     def print_post(self):
         print(self.datetime.strftime("%d.%m.%Y")+
@@ -61,7 +63,7 @@ def fetch_code_from_url(url):
         The code.
 
     """
-    user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
+    user_agent = url_agent
 
     headers={'User-Agent':user_agent,} 
 
@@ -115,7 +117,6 @@ def extract_posts(decoded_source_html):
     while decoded_source_html.find(
             "spravy-o-raste-hub spravy-o-raste-hub-",
             start_character) > -1:
-        
         next_index = decoded_source_html.find(
             "spravy-o-raste-hub spravy-o-raste-hub-",
             start_character)
@@ -180,17 +181,72 @@ def get_all_posts(year,month,region=0):
 
 
 def save_list(data,name,location="998_generated\\"):
+    """
+    A simple function to save a given list to a specific location using pickle.
+
+    Parameters
+    ----------
+    data : list
+        The data to be saved. In our context: mostly a list of Post objects.
+    
+    name : str
+        The name of the file to be written. 
+        
+    location : str, optional
+        The relative path to the data folder. The default is "998_generated\\".
+
+    Returns
+    -------
+    none
+    """
+    
     with open(location+name, "wb") as f:  
         pickle.dump(data, f)
         
         
 def load_list(name,location="998_generated\\"):
+    """
+    A simple function to load a saved list from a specific location using pickle.
+
+    Parameters
+    ----------    
+    name : str
+        The name of the file to load. 
+        
+    location : str, optional
+        The relative path to the data folder. The default is "998_generated\\".
+
+    Returns
+    -------
+    data : list
+        The data to be loaded. In our context: mostly a list of Post objects.
+    """
+    
     with open(location+name, "rb") as f:
         data = pickle.load(f)
     return data
 
 
 def mine_years(start_year=2004,end_year=2023):
+    """
+    A wrapper function to mine posts from a specific period. 
+    Calls the get_all_posts() on all the years and months 
+    in the specified period. A pickle file for each month is created, as per 
+    get_all_posts() function call.
+
+    Parameters
+    ----------
+    start_year : int, optional
+        The earliest year to include. The default is 2004.
+    end_year : int, optional
+        The latest year to include. The default is 2023.
+
+    Returns
+    -------
+    None.
+
+    """
+    
     for year in range(start_year,end_year+1):
         for month in range(1,12+1):
             posts = get_all_posts(year,month)
@@ -198,6 +254,21 @@ def mine_years(start_year=2004,end_year=2023):
 
 
 def load_all_posts(location="998_generated\\"):
+    """
+    A function to load all the available posts.
+
+    Parameters
+    ----------
+    location : str, optional
+        The relative path to the data folder. The default is "998_generated\\".
+
+    Returns
+    -------
+    all_posts : list
+        The list of all loaded objects, in our context usually Post objects.
+
+    """
+    
     all_posts = []
     for file in os.listdir(location):
         posts = load_list(file,location=location)
@@ -205,6 +276,33 @@ def load_all_posts(location="998_generated\\"):
             all_posts.append(post)
     return all_posts
     
+
+def number_posts(location="998_generated\\"):
+    """
+    A function to load, number and save al lthe posts. An index in the
+    chronological order is assigned to every post within a month, so indices
+    are unique within the month only. These are useful when dealing with 
+    months of posts.
+
+    Parameters
+    ----------
+    location : str, optional
+        The relative path to the data folder. The default is "998_generated\\".
+
+    Returns
+    -------
+    none
+
+    """
+    
+    for file in os.listdir(location):
+        posts = load_list(name=file,location=location)
+        
+        for i in range(len(posts)):
+            posts[i].id = i
+            
+        save_list(posts,file,location=location)
+        
 
 
 #posts = load_all_posts() 
