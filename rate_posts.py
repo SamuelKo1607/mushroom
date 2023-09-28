@@ -77,7 +77,8 @@ def compile_request(post_comment,legacy = False):
 def rate_post(post):
     """
     A function to assign a rating to a post. The raiting is supposed to 
-    evaluate the mushroom picking conditions.
+    evaluate the mushroom picking conditions. If the post is marked as 
+    negative by the author, the raiting is 1.
 
     Parameters
     ----------
@@ -116,11 +117,31 @@ def rate_post(post):
             return int(rates[0])
 
 
-
 def rate_selection(start=10000,
                    end=10010,
                    location="998_generated\\"):
-    
+    """
+    Not for production, but loads all the posts and rates and prints 
+    the rating of a selection of all the impacts. 
+
+    Parameters
+    ----------
+    start : int, optional
+        The index of the first analyzed (inclusive) post. 
+        The default is 10000.
+
+    ed : int, optional
+        The index of the last analyzed (exclusive) post. 
+        The default is 10010.
+
+    location : str, optional
+        The filder with all the posts that may be analyzed. 
+    The default is "998_generated\\".
+
+    Returns
+    -------
+    None
+    """
     posts = load_all_posts(location=location)[start:end]
     for post in posts:
         response = rate_post(post)
@@ -132,7 +153,19 @@ def rate_selection(start=10000,
         
              
 def add_one_rate(location="998_generated\\"):
+    """
+    Adds one rating to a random post and saves.
     
+    Parameters
+    ----------
+    location : str, optional
+        The filder with all the posts that may be analyzed. 
+        The default is "998_generated\\".
+    
+    Returns
+    -------
+    None
+    """
     filelist = os.listdir(location)
     order = np.random.choice(filelist,len(filelist),replace=False)
     file_index = 0
@@ -169,7 +202,24 @@ def add_one_rate(location="998_generated\\"):
 
 def print_all_rated(location="998_generated\\",
                     limit=20):
+    """
+    Prints all already rated posts. By default, 
+    prints just first couple and the count.
+
+    Parameters
+    ----------
+    location : str, optional
+        The filder with all the posts that may be analyzed. 
+        The default is "998_generated\\".
     
+    limit : int, optional
+        How many first rated posts will be printed. 
+        The default if 20.
+
+    Returns
+    -------
+    None
+    """
     total = 0
     posts = load_all_posts(location = location)
     for post in posts:
@@ -190,7 +240,22 @@ def print_all_rated(location="998_generated\\",
     
 
 def patch_negative(location="998_generated\\"):
-    
+    """
+    Browses through all the posts and patches all the negataive ones 
+    that were rated to be better than 1, back down to 1. Not necesary for
+    prodution.
+
+    Parameters
+    ----------
+    location : str, optional
+        The filder with all the posts that may be analyzed. 
+        The default is "998_generated\\".
+
+    Returns
+    -------
+    total_fixed : int
+        Number of patched posts.
+    """
     filelist = os.listdir(location)
     total_fixed = 0
     for file in filelist:
