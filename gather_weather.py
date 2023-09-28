@@ -7,6 +7,7 @@ from geopy.geocoders import Nominatim
 from api_keys import geopy_loc_app_name
 import numpy as np
 import pandas as pd
+import os
 import time
 import datetime as dt
 import matplotlib.pyplot as plt
@@ -28,7 +29,6 @@ def get_unique_cities(location="998_generated\\"):
     -------
     cities : list of str
         All the unique cities.
-
     """
     posts = load_all_posts(location = location)
     cities = []
@@ -37,7 +37,38 @@ def get_unique_cities(location="998_generated\\"):
             pass
         else:
             cities.append(post.city)
+
     return cities
+
+
+def get_missing_cities(data_location="998_generated\\",
+                       weather_location="997_weather_data\\"):
+    """
+    A function to get all the unique cities for all the posts
+    that are not downlaoded yet.
+
+    Parameters
+    ----------
+    data_location : str, optional
+        The relative path to the data folder. 
+        Default is "998_generated\\".
+    weather_location : str, optional
+        The relative path to the weather data folder. 
+        Default is "997_weather_data\\".
+
+    Returns
+    -------
+    cities_needed : list of str
+        All the unique citie that are still missing in among the weather data.
+
+    """
+    cities_needed = get_unique_cities(location = data_location)
+    weather_files_downlaoded = os.listdir(weather_location)
+    for file in weather_files_downlaoded:
+        cities_needed.remove(file[:-4])
+
+    return cities_needed
+
 
 
 def get_GPS(city,
@@ -314,7 +345,7 @@ def build_weather_database(cities,
         data = [city,lat[0],lon[0],weather_df]
         save_list(data,city+".pkl",location=location)
         n+=1
-        time.sleep(20)
+        #time.sleep(20)
     print("Saved "+str(n)+" weather database files.")
 
 
@@ -327,7 +358,7 @@ def load_weather_database(city,
 print_map(get_unique_cities())
 
 
-build_weather_database(get_unique_cities()[9])
+build_weather_database(get_missing_cities()[:2])
 
 
 
