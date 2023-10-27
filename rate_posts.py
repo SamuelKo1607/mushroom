@@ -97,7 +97,7 @@ def rate_post(post):
 
     """
     if not post.is_positive:
-        return 1
+        return 0
     else:
         comment = post.comment
         query = compile_request(comment)   
@@ -242,7 +242,7 @@ def print_all_rated(location="998_generated\\",
 def patch_negative(location="998_generated\\"):
     """
     Browses through all the posts and patches all the negataive ones 
-    that were rated to be better than 1, back down to 1. Not necesary for
+    that were rated to be better than 0, back down to 0. Not necesary for
     prodution.
 
     Parameters
@@ -266,8 +266,8 @@ def patch_negative(location="998_generated\\"):
             except:
                 pass
             else:
-                if rate>1 and not post.is_positive:
-                    post.rate = 1
+                if rate>0 and not post.is_positive:
+                    post.rate = 0
                     total_fixed += 1
         save_list(posts,file,location=location)
     return total_fixed
@@ -282,7 +282,7 @@ def main(n=100):
     print_all_rated(limit=0)                    
                     
     
-main(int(sys.argv[1]))             
+#main(int(sys.argv[1]))
     
     
 
