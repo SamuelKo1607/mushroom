@@ -412,9 +412,8 @@ def load_weather(city,
 
 
 
-
-
-print_map(get_unique_cities())
+if __name__ == "__main__":
+    print_map(get_unique_cities())
 
 
 
