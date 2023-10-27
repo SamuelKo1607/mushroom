@@ -264,9 +264,9 @@ def patch_negative(location="998_generated\\"):
             try:
                 rate = post.rate
             except:
-                pass
+                post.rate = -1
             else:
-                if rate>0 and not post.is_positive:
+                if rate!=0 and not post.is_positive:
                     post.rate = 0
                     total_fixed += 1
         save_list(posts,file,location=location)
@@ -281,7 +281,7 @@ def main(n=100):
     
     print_all_rated(limit=0)                    
                     
-    
+
 #main(int(sys.argv[1]))
     
     
