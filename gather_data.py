@@ -11,6 +11,7 @@ class Post:
         self.city = city
         self.is_positive = is_positive
         self.comment = comment
+        self.rate = -1
         
         
     def print_post(self):
@@ -253,7 +254,8 @@ def mine_years(start_year=2004,end_year=2023):
             save_list(posts,str(year)+"_"+str(month)+".pkl")
 
 
-def load_all_posts(location="998_generated\\"):
+def load_all_posts(location="998_generated\\",
+                   rated_only = False):
     """
     A function to load all the available posts.
 
@@ -274,7 +276,11 @@ def load_all_posts(location="998_generated\\"):
         posts = load_list(file,location=location)
         for post in posts:
             all_posts.append(post)
-    return all_posts
+
+    if rated_only:
+        return [post for post in all_posts if post.rate>-1]
+    else:
+        return all_posts
     
 
 def number_posts(location="998_generated\\"):
@@ -305,7 +311,9 @@ def number_posts(location="998_generated\\"):
         
 
 
-#posts = load_all_posts() 
+#posts = load_all_posts(rated_only=True)
+
+
 
 
 
