@@ -324,7 +324,8 @@ def build_weather_dataframe(city,
 def build_weather_database(cities,
                            location="997_weather_data\\"):
     """
-    A procedure to save all the wather data.
+    A procedure to save all the wather data. Build like:
+        >>> build_weather_database(get_missing_cities()[:2])
 
     Parameters
     ----------
@@ -349,16 +350,74 @@ def build_weather_database(cities,
     print("Saved "+str(n)+" weather database files.")
 
 
-def load_weather_database(city,
-                          location="997_weather_data\\"):
-    #TODO
-    pass
+def load_weather(city,
+                 datetime,
+                 attributes = ['temperature_2m_mean_C'],
+                 location="997_weather_data\\"):
+    """
+    Loads the weather data for a given day for a given city from the database.
+
+    Parameters
+    ----------
+    city : str
+        The city of interest.
+
+    datetime : dt.datetime or np.datetime64
+        The date of interest.
+
+    attributes: list of str, optional
+        The attributes of interest. The default is 'temperature_2m_mean_C'.
+        Allowed attributes: ['elevation',
+                             'temperature_2m_max_C',
+                             'temperature_2m_min_C',
+                             'temperature_2m_mean_C',
+                             'precipitation_sum_mm',
+                             'rain_sum_mm',
+                             'snowfall_sum_cm',
+                             'precipitation_hours_h',
+                             'evapotranspiration'].
+    
+    location : str, optional
+        The relative path to the weather data folder. 
+        The default is "997_weather_data\\".
+
+    Returns
+    -------
+    state : list of float
+        The values of the requested attributes for the requested datetime.
+
+    """
+    available_cities =  os.listdir(location)
+    matches = [match for match in available_cities if city in match]
+    if len(matches) == 0:
+        raise Exception("city not found")
+    elif len(matches) > 1:
+        raise Exception("city ambiguous")
+    else:
+        data = load_list(matches[0],location=location)
+
+    datetime64s = np.array(data[3]["date"])
+    index = min(range(len(datetime64s)),
+                key=lambda i: abs(datetime64s[i]-np.datetime64(datetime)))
+
+    if datetime64s[index]-np.datetime64(datetime) > np.timedelta64(13,'h'):
+        raise Exception(f"date {datetime} not in the database")
+    else:
+        pass
+
+    state = [data[3][att][index] for att in attributes]
+
+    return state
+
+
+
+
 
 
 print_map(get_unique_cities())
 
 
-build_weather_database(get_missing_cities()[:2])
+
 
 
 
