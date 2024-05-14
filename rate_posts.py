@@ -14,6 +14,67 @@ import numpy as np
 openai.api_key = openai_api_key
 
 
+#TODO implemenet this for timeout
+"""
+import openai
+import threading
+openai.api_key = key
+
+def api_call(result, api_parameters):
+    api_response = openai.ChatCompletion.create(**api_parameters)
+    result[0] = api_response
+
+def chat_c_threaded(api_parameters):
+    timeout = api_parameters.pop("timeout", None)
+    result = [None]
+
+    api_thread = threading.Thread(target=api_call, args=(result, api_parameters))
+    api_thread.start()
+    api_thread.join(timeout=timeout)  # Set the timeout for the API call
+
+    if api_thread.is_alive():
+        # If the API call is still running after the timeout, terminate it
+        print("API call timeout, retrying...")
+
+        api_thread.join(timeout=timeout + 1)  # Retry
+        if api_thread.is_alive(): 
+            print("API call still hanging, retry failed.")
+            return {
+                "choices": [
+                    {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "API Timeout"
+                    },
+                    "finish_reason": "timeout"
+                    }
+                ],
+            }
+
+    # The API call has finished within the timeout or retried successfully
+    return result[0]
+
+# Usage ------------
+if __name__ == "__main__":
+    print("Threaded timeout example")
+    for maxtoken in [10, 100, 500]:
+        # set as json (not using equal sign), now with a working 'timeout'
+        chat_properties = {
+            "model": "gpt-3.5-turbo", "max_tokens": maxtoken, "top_p": 0.1, "timeout": 2.5,
+            "messages": [
+                {"role": "system", "content": "You are an AI assistant"},
+                {"role": "user", "content": "Write a leprechaun story"},
+            ]
+        }
+        print(chat_c_threaded(chat_properties)['choices'][0]['message'])
+"""
+
+
+
+
+
+
 def count_posts_words(location="998_generated\\"):
     """
     A simple function to load all the posts 
@@ -101,7 +162,9 @@ def rate_post(post):
     else:
         comment = post.comment
         query = compile_request(comment)   
-        chat = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=query)
+        chat = openai.ChatCompletion.create(model="gpt-3.5-turbo",
+                                            messages=query,
+                                            max_tokens=30)
         response = chat.choices[0].message.content
     
         rates = re.findall(r'\d+', response)
@@ -175,9 +238,7 @@ def add_one_rate(location="998_generated\\"):
         posts = load_list(name=file,location=location)
         ids = []
         for post in posts:
-            try:
-                rate = post.rate
-            except:
+            if post.rate == -1:
                 ids.append(post.id)
             else:
                 pass
