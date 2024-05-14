@@ -11,6 +11,7 @@ import os
 import time
 import datetime as dt
 import matplotlib.pyplot as plt
+from numba import jit
 
 geolocator = Nominatim(user_agent=geopy_loc_app_name)
 
@@ -296,8 +297,8 @@ def build_weather_dataframe(city,
 
     elevation = np.array([df["elevation"]["time"]]*len(df["daily"]["time"]))
     date = np.zeros(0,dtype=dt.datetime)
-    for time in df["daily"]["time"]:
-        date = np.append(date,datetime_from_jsondate(time))
+    for tm in df["daily"]["time"]:
+        date = np.append(date,datetime_from_jsondate(tm))
     temperature_2m_max_C = np.array(df["daily"]["temperature_2m_max"])
     temperature_2m_min_C = np.array(df["daily"]["temperature_2m_min"])
     temperature_2m_mean_C = np.array(df["daily"]["temperature_2m_mean"])
