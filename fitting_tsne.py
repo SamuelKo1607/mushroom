@@ -1,14 +1,10 @@
 import numpy as np
 import datetime as dt
 from sklearn.manifold import TSNE
-
+from tqdm.auto import tqdm
 
 from gather_data import load_all_posts
 from gather_weather import load_weather
-
-
-
-
 
 
 rated_posts = load_all_posts(rated_only=True)
@@ -25,62 +21,31 @@ mintemp_7d = []
 evapotranspiration_3d = []
 evapotranspiration_7d = []
 
-for i, post in enumerate(rated_posts):
+for i in tqdm(range(len(rated_posts))):
 
-    print(i)
-
+    post = rated_posts[i]
     rating.append(post.rate)
 
-    rainfall_3d.append(sum([load_weather(post.city,
-                                         post.datetime - dt.timedelta(delta),
-                                         attributes=['rain_sum_mm'])[0]
-                            for delta in range(1,4)]))
+    w = np.zeros((0,5))
+    for delta in range(1,8):
+        w = np.vstack((w,load_weather(post.city,
+                                      post.datetime - dt.timedelta(delta),
+                                      attributes=['rain_sum_mm',
+                                                  'precipitation_hours_h',
+                                                  'temperature_2m_mean_C',
+                                                  'temperature_2m_min_C',
+                                                  'evapotranspiration'])))
 
-    rainfall_7d.append(sum([load_weather(post.city,
-                                         post.datetime - dt.timedelta(delta),
-                                         attributes=['rain_sum_mm'])[0]
-                            for delta in range(4,8)]))
-
-    precip_hours_3d.append(sum([load_weather(post.city,
-                                             post.datetime - dt.timedelta(delta),
-                                             attributes=['precipitation_hours_h'])[0]
-                                for delta in range(1,4)]))
-
-    precip_hours_7d.append(sum([load_weather(post.city,
-                                             post.datetime - dt.timedelta(delta),
-                                             attributes=['precipitation_hours_h'])[0]
-                                for delta in range(4,8)]))
-
-    temp_3d.append(np.mean([load_weather(post.city,
-                                         post.datetime - dt.timedelta(delta),
-                                         attributes=['temperature_2m_mean_C'])[0]
-                            for delta in range(1,4)]))
-
-    temp_7d.append(np.mean([load_weather(post.city,
-                                         post.datetime - dt.timedelta(delta),
-                                         attributes=['temperature_2m_mean_C'])[0]
-                            for delta in range(4,8)]))
-
-    mintemp_3d.append(np.mean([load_weather(post.city,
-                                            post.datetime - dt.timedelta(delta),
-                                            attributes=['temperature_2m_min_C'])[0]
-                               for delta in range(1,4)]))
-
-    mintemp_7d.append(np.mean([load_weather(post.city,
-                                            post.datetime - dt.timedelta(delta),
-                                            attributes=['temperature_2m_min_C'])[0]
-                               for delta in range(4,8)]))
-
-    evapotranspiration_3d.append(np.mean([load_weather(post.city,
-                                                       post.datetime - dt.timedelta(delta),
-                                                       attributes=['evapotranspiration'])[0]
-                                          for delta in range(1,4)]))
-
-    evapotranspiration_7d.append(np.mean([load_weather(post.city,
-                                                       post.datetime - dt.timedelta(delta),
-                                                       attributes=['evapotranspiration'])[0]
-                                          for delta in range(4,8)]))
-
+    rainfall_3d = np.append(rainfall_3d,np.sum(w[:3,0]))
+    rainfall_7d = np.append(rainfall_7d,np.sum(w[:7,0]))
+    precip_hours_3d = np.append(precip_hours_3d,np.sum(w[:3,1]))
+    precip_hours_7d = np.append(precip_hours_7d,np.sum(w[:7,1]))
+    temp_3d = np.append(temp_3d,np.mean(w[:3,2]))
+    temp_7d = np.append(temp_7d,np.mean(w[:7,2]))
+    mintemp_3d = np.append(mintemp_3d,np.mean(w[:3,3]))
+    mintemp_7d = np.append(mintemp_7d,np.mean(w[:7,3]))
+    evapotranspiration_3d = np.append(evapotranspiration_3d,np.mean(w[:3,4]))
+    evapotranspiration_3d = np.append(evapotranspiration_3d,np.mean(w[:7,4]))
 
 """
 
