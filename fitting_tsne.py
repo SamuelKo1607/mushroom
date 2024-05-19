@@ -1,5 +1,6 @@
 import numpy as np
 import datetime as dt
+import pandas as pd
 from sklearn.manifold import TSNE
 from tqdm.auto import tqdm
 
@@ -10,6 +11,7 @@ from gather_weather import load_weather
 rated_posts = load_all_posts(rated_only=True)
 
 rating = []
+week = []
 rainfall_3d = []
 rainfall_7d = []
 precip_hours_3d = []
@@ -25,6 +27,7 @@ for i in tqdm(range(len(rated_posts))):
 
     post = rated_posts[i]
     rating.append(post.rate)
+    week.append(post.datetime.isocalendar()[1])
 
     w = np.zeros((0,5))
     for delta in range(1,8):
@@ -46,6 +49,24 @@ for i in tqdm(range(len(rated_posts))):
     mintemp_7d = np.append(mintemp_7d,np.mean(w[:7,3]))
     evapotranspiration_3d = np.append(evapotranspiration_3d,np.mean(w[:3,4]))
     evapotranspiration_3d = np.append(evapotranspiration_3d,np.mean(w[:7,4]))
+
+
+df = pd.DataFrame({'rating': rating,
+                   'week': week,
+                   'rainfall_3d': rainfall_3d,
+                   'rainfall_7d': rainfall_7d,
+                   'precip_hours_3d': precip_hours_3d,
+                   'precip_hours_7d': precip_hours_7d,
+                   'temp_3d': temp_3d,
+                   'temp_7d': temp_7d,
+                   'mintemp_3d': mintemp_3d,
+                   'mintemp_7d': mintemp_7d,
+                   'evapotranspiration_3d': evapotranspiration_3d,
+                   'evapotranspiration_7d': evapotranspiration_7d})
+
+df.to_pickle("datacube.pkl")
+
+print(df)
 
 """
 
