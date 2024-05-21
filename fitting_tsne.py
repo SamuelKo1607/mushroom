@@ -39,16 +39,16 @@ for i in tqdm(range(len(rated_posts))):
                                                   'temperature_2m_min_C',
                                                   'evapotranspiration'])))
 
-    rainfall_3d = np.append(rainfall_3d,np.sum(w[:3,0]))
-    rainfall_7d = np.append(rainfall_7d,np.sum(w[:7,0]))
-    precip_hours_3d = np.append(precip_hours_3d,np.sum(w[:3,1]))
-    precip_hours_7d = np.append(precip_hours_7d,np.sum(w[:7,1]))
+    rainfall_3d = np.append(rainfall_3d,np.mean(w[:3,0]))
+    rainfall_7d = np.append(rainfall_7d,np.mean(w[:7,0]))
+    precip_hours_3d = np.append(precip_hours_3d,np.mean(w[:3,1]))
+    precip_hours_7d = np.append(precip_hours_7d,np.mean(w[:7,1]))
     temp_3d = np.append(temp_3d,np.mean(w[:3,2]))
     temp_7d = np.append(temp_7d,np.mean(w[:7,2]))
     mintemp_3d = np.append(mintemp_3d,np.mean(w[:3,3]))
     mintemp_7d = np.append(mintemp_7d,np.mean(w[:7,3]))
     evapotranspiration_3d = np.append(evapotranspiration_3d,np.mean(w[:3,4]))
-    evapotranspiration_3d = np.append(evapotranspiration_3d,np.mean(w[:7,4]))
+    evapotranspiration_7d = np.append(evapotranspiration_7d,np.mean(w[:7,4]))
 
 
 df = pd.DataFrame({'rating': rating,
