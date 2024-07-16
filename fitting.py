@@ -338,6 +338,26 @@ def fit_logit_bayesian(df,
                                          -0.05,
                                          -0.09,
                                          -0.1])):
+    """
+    GLM bayesian.
+
+    Parameters
+    ----------
+    df : pd.dataframe
+        as from hand_jar.
+    burnin : int, optional
+        DESCRIPTION. The default is 1000.
+    samples : int, optional
+        DESCRIPTION. The default is 10000.
+    coeffs0 : np.array of float, optional
+        Start coefficients. The default is np.array([-0.05,                                         -0.03,                                         -0.01,                                         -0.09,                                         0.04,                                         -0.01,                                         0.05,                                         -0.1,                                         0.03,                                         -0.05,                                         -0.09,                                         -0.1]).
+
+    Returns
+    -------
+    sampled : np.array of float
+        Samples, shape (burnin+samples, 12).
+
+    """
 
     x = np.vstack((df["week"],
                    df["rainfall_3d"],
@@ -369,6 +389,99 @@ def fit_logit_bayesian(df,
     return sampled
 
 
+def z_norm(array):
+    return (array-np.mean(array))/np.std(array)
+
+
+def backprop_nn(df,
+                iterations=1000,
+                hidden_neurons=7,
+                steepness=1,
+                conv_speed=0.1):
+
+    a = np.vstack((z_norm(df["week"]),
+                   z_norm(df["rainfall_3d"]),
+                   z_norm(df["rainfall_7d"]),
+                   z_norm(df["precip_hours_3d"]),
+                   z_norm(df["precip_hours_7d"]),
+                   z_norm(df["temp_3d"]),
+                   z_norm(df["temp_7d"]),
+                   z_norm(df["mintemp_3d"]),
+                   z_norm(df["mintemp_7d"]),
+                   z_norm(df["evapotranspiration_3d"]),
+                   z_norm(df["evapotranspiration_7d"])
+                   )).transpose()
+    b = df["rating"]/5
+    
+    def s(x,l=1): # l = koeficient rýchlosti
+        return 1/(1+np.exp(-x*l))
+    
+    def ds(x,l=1):
+        return l*s(x,l)*(1-s(x,l))
+    
+    def xor(x,y):
+        return (int(round(x))^int(round(y))
+                )+np.random.normal(0,0.005) #blízke 0 a 1, ale nie ostré
+
+    w = (np.random.random((hidden_neurons,
+                           a.shape[1]+1))-0.5)/10 # koeficienty v prvej vrstve
+    dw = np.zeros((hidden_neurons,
+                   a.shape[1]+1)) # koeficienty v prvej vrstve - delta
+
+    q = (np.random.random(hidden_neurons+1)-0.5)/10 # koeficienty v druhej vrstve
+    dq = np.zeros(hidden_neurons+1) # koeficienty v druhej vrstve - delta
+
+    m=np.zeros(hidden_neurons) # výstupy prvej vstrvy
+    
+    def val(m,q):
+        s_val = -q[0] + np.sum(m*q[1:])
+        return s_val
+    
+    def E(a, b, w, q, m): # výpočet chybovej funkcie
+        hits = 0
+        for i in range(len(b)): # tréningové vstupy
+            m = s(( -1*(w[:,0]) + np.sum(w[:,1:]*a[i,:],axis=1))
+                  ,steepness) # skrytá vrstva
+            hits += (np.round(s((val(m,q)),steepness))
+                     == np.round(b[i]))
+        return hits
+
+    def delta_out(a2,b2,w,q,m):  #a2 = 1D vektor dĺžky 11, b2 = číslo
+        m = s(( -1*(w[:,0]) + np.sum(w[:,1:]*a2,axis=1)) ,steepness)
+        sigma_l = val(m,q)    
+        pref = (b2-s((sigma_l),steepness))*ds((sigma_l),steepness)
+        dq = np.append(-conv_speed*pref,
+                       conv_speed*pref*m)   #vektor dĺžky N1+1 = vektor dq
+        return dq
+    
+    def delta_hidden(a2,b2,w,q,m):  #a2 = 1D vektor dĺžky 11, b2 = číslo
+        m = s(( -1*(w[:,0]) + np.sum(w[:,1:]*a2,axis=1)) ,steepness)
+        sigma_l = val(m,q)
+        pref = (b2-s((sigma_l),steepness))*ds((sigma_l),steepness)
+        for i in range(hidden_neurons): #cez všetky skryté neuróny
+            sigma_i = -w[i,0] + np.sum(a2*w[i,1:])
+            dw[i,0]= pref*q[i+1]*ds((sigma_i),
+                                    steepness)  # -*-: jedno z triviálneho vstupu do skrytej vrstvy a jedno z derivácie
+            for j in range(len(a2)):   #cez všetky vstupy
+                dw[i,j+1]= -pref*q[i+1]*ds((sigma_i),steepness)*a2[j]
+        return dw
+
+    def learn(rounds, a, b, w, q, m, dw, dq):
+        for i in tqdm(range(rounds)):
+            if np.random.random() >= 0.5:
+                pick = np.random.choice(np.arange(len(b))[b>0.5])
+            else:
+                pick = np.random.choice(np.arange(len(b))[b<0.5])
+            dq = delta_out(a[pick,:],b[pick],w,q,m)
+            dw = delta_hidden(a[pick,:],b[pick],w,q,m)
+            q += dq
+            w += dw
+        
+    print(E(a, b, w, q, m))
+    learn(iterations, a, b, w, q, m, dw, dq)
+    print(E(a, b, w, q, m))
+    return w,q
+
 
 #%%
 if __name__ == "__main__":
@@ -382,10 +495,13 @@ if __name__ == "__main__":
     sample = fit_logit_bayesian(df)
 
 
+    w,q = backprop_nn(df,100000)
+    plt.imshow(w)
+    plt.show()
+    plt.plot(q)
+    plt.show()
+    
 
-    
-    
-    
     
     
     
