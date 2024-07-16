@@ -2,11 +2,17 @@ name: mushroom
 channels:
   - defaults
 dependencies:
-  - numpy
-  - requests
-  - pandas
   - matplotlib
-  - spyder
-  - openai
-  - numba
+  - numba=0.60
+  - openai=1.25
+  - pandas=2.2
+  - numpy=1.26
+  - python=3.10
+  - requests
+  - scipy=1.13
+  - spyder=5.5
+  - ipython=8.25
+  - tensorflow=2.10
+  - scikit-learn
+  - geopy=2.4
 prefix: C:\Users\skoci\anaconda3\envs\mushroom
