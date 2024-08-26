@@ -352,9 +352,10 @@ def build_weather_database(cities,
 
 
 def load_weather(city,
-                 datetime,
+                 datetime = None,
                  attributes = ['temperature_2m_mean_C'],
-                 location="997_weather_data\\"):
+                 location = "997_weather_data\\",
+                 load_whole = False,):
     """
     Loads the weather data for a given day for a given city from the database.
 
@@ -382,6 +383,10 @@ def load_weather(city,
         The relative path to the weather data folder. 
         The default is "997_weather_data\\".
 
+    load_whole : bool, optional
+        If true, the whole data for the date will be loaded, 
+        ignorig the date and the attributes.
+
     Returns
     -------
     state : list of float
@@ -397,18 +402,21 @@ def load_weather(city,
     else:
         data = load_list(matches[0],location=location)
 
-    datetime64s = np.array(data[3]["date"])
-    index = min(range(len(datetime64s)),
-                key=lambda i: abs(datetime64s[i]-np.datetime64(datetime)))
-
-    if datetime64s[index]-np.datetime64(datetime) > np.timedelta64(13,'h'):
-        raise Exception(f"date {datetime} not in the database")
+    if load_whole:
+        return data
     else:
-        pass
-
-    state = [data[3][att][index] for att in attributes]
-
-    return state
+        datetime64s = np.array(data[3]["date"])
+        index = min(range(len(datetime64s)),
+                    key=lambda i: abs(datetime64s[i]-np.datetime64(datetime)))
+    
+        if datetime64s[index]-np.datetime64(datetime) > np.timedelta64(13,'h'):
+            raise Exception(f"date {datetime} not in the database")
+        else:
+            pass
+    
+        state = [data[3][att][index] for att in attributes]
+    
+        return state
 
 
 
